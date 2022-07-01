@@ -7,6 +7,18 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+func ValidateLoginUserRequest(request model.LoginRequest) {
+	err := validation.ValidateStruct(&request,
+		validation.Field(&request.Email, validation.Required),
+		validation.Field(&request.Password, validation.Required, validation.Length(8, 0)),
+	)
+	if err != nil {
+		panic(exception.ValidationError{
+			Message: err.Error(),
+		})
+	}
+}
+
 func ValidateCreateUserRequest(request model.RegisterRequest) {
 	err := validation.ValidateStruct(&request,
 		validation.Field(&request.Id, validation.Required),

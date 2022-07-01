@@ -54,22 +54,28 @@ func(repository *userRepositoryImpl) FindAll()(users []entity.User){
 	return users
 }
 
-func (repository *userRepositoryImpl) FindById(id string)(user *entity.User){
+func (repository *userRepositoryImpl) FindById(id string)(user *entity.User, err error){
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
-	err := repository.Collection.FindOne(ctx, id).Decode(&user)
-	exception.PanicIfErr(err)
-	return user
+	err = repository.Collection.FindOne(ctx, id).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	
+	return user, nil
 }
 
-func (repository *userRepositoryImpl) FindByEmail(email string)(user *entity.User){
+func (repository *userRepositoryImpl) FindByEmail(email string)(user *entity.User,err error){
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
-	err := repository.Collection.FindOne(ctx, email).Decode(&user)
-	exception.PanicIfErr(err)
-	return user
+	err = repository.Collection.FindOne(ctx, email).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	
+	return user, nil
 }
 
 
