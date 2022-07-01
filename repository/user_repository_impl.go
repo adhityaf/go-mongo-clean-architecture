@@ -19,20 +19,20 @@ func NewUserRepository(database *mongo.Database) UserRepository {
 	}
 }
 
-func (repository *userRepositoryImpl) Create(user entity.User){
+func (repository *userRepositoryImpl) Create(user entity.User) {
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
 	_, err := repository.Collection.InsertOne(ctx, bson.M{
-		"_id": user.Id,
+		"_id":      user.Id,
 		"username": user.Username,
-		"email": user.Email,
+		"email":    user.Email,
 		"password": user.Password,
 	})
 	exception.PanicIfErr(err)
 }
 
-func(repository *userRepositoryImpl) FindAll()(users []entity.User){
+func (repository *userRepositoryImpl) FindAll() (users []entity.User) {
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
@@ -43,27 +43,35 @@ func(repository *userRepositoryImpl) FindAll()(users []entity.User){
 	err = cursor.All(ctx, &documents)
 	exception.PanicIfErr(err)
 
-	for _, document := range documents{
+	for _, document := range documents {
 		users = append(users, entity.User{
-			Id: document["_id"].(string),
+			Id:       document["_id"].(string),
 			Username: document["username"].(string),
-			Email: document["email"].(string),
+			Email:    document["email"].(string),
 			Password: document["password"].(string),
-		}) 
+		})
 	}
 	return users
 }
 
-func (repository *userRepositoryImpl) FindById(id string)(user *entity.User){
+func (repository *userRepositoryImpl) FindById(id string) (user *entity.User) {
+	filter := bson.D{{"_id", id}}
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
-	err := repository.Collection.FindOne(ctx, id).Decode(&user)
+	var document bson.M
+	err := repository.Collection.FindOne(ctx, filter).Decode(&document)
 	exception.PanicIfErr(err)
-	return user
+
+	return &entity.User{
+		Id:       document["_id"].(string),
+		Username: document["username"].(string),
+		Email:    document["email"].(string),
+		Password: document["password"].(string),
+	}
 }
 
-func (repository *userRepositoryImpl) FindByEmail(email string)(user *entity.User){
+func (repository *userRepositoryImpl) FindByEmail(email string) (user *entity.User) {
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
@@ -71,5 +79,3 @@ func (repository *userRepositoryImpl) FindByEmail(email string)(user *entity.Use
 	exception.PanicIfErr(err)
 	return user
 }
-
-

@@ -45,7 +45,20 @@ func (service *userServiceImpl) List() (responses []model.GetUserResponse) {
 			Id:       user.Id,
 			Username: user.Username,
 			Email:    user.Email,
+			Password: user.Password,
 		})
 	}
 	return responses
+}
+
+func(service *userServiceImpl) FindById(id string)(response model.GetUserResponse){
+	user := service.UserRepository.FindById(id)
+	response = model.GetUserResponse{
+		Id: user.Id,
+		Email: user.Email,
+		Username: user.Username,
+		Password: user.Password,
+	}
+
+	return response
 }
