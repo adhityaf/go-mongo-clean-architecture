@@ -24,6 +24,20 @@ func (controller *UserController) Route(app *fiber.App) {
 	app.Post("/v1/api/register", controller.Create)
 	app.Get("/v1/api/users", controller.GetAll)
 	app.Get("/v1/api/users/:id", controller.GetById)
+	app.Post("/v1/api/login", controller.Login)
+}
+
+func (controller *UserController) Login(ctx *fiber.Ctx) error {
+	var request model.LoginRequest
+	err := ctx.BodyParser(&request)
+	exception.PanicIfErr(err)
+
+	response := controller.UserService.Login(request)
+	return ctx.JSON(model.WebResponse{
+		Code:   http.StatusOK,
+		Status: "Success Login",
+		Data:   response,
+	})
 }
 
 func (controller *UserController) Create(ctx *fiber.Ctx) error {

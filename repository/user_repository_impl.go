@@ -54,28 +54,26 @@ func (repository *userRepositoryImpl) FindAll() (users []entity.User) {
 	return users
 }
 
-func (repository *userRepositoryImpl) FindById(id string) (user *entity.User) {
-	filter := bson.D{{"_id", id}}
+func (repository *userRepositoryImpl) FindById(id string) (user *entity.User, err error) {
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
-	var document bson.M
-	err := repository.Collection.FindOne(ctx, filter).Decode(&document)
-	exception.PanicIfErr(err)
-
-	return &entity.User{
-		Id:       document["_id"].(string),
-		Username: document["username"].(string),
-		Email:    document["email"].(string),
-		Password: document["password"].(string),
+	err = repository.Collection.FindOne(ctx, id).Decode(&user)
+	if err != nil {
+		return nil, err
 	}
+
+	return user, nil
 }
 
-func (repository *userRepositoryImpl) FindByEmail(email string) (user *entity.User) {
+func (repository *userRepositoryImpl) FindByEmail(email string) (user *entity.User, err error) {
 	ctx, cancel := config.NewMongoContext()
 	defer cancel()
 
-	err := repository.Collection.FindOne(ctx, email).Decode(&user)
-	exception.PanicIfErr(err)
-	return user
+	err = repository.Collection.FindOne(ctx, email).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

@@ -2,6 +2,8 @@ package service
 
 import (
 	"go-fiber-clean-arch/entity"
+	"go-fiber-clean-arch/exception"
+	"go-fiber-clean-arch/helpers"
 	"go-fiber-clean-arch/model"
 	"go-fiber-clean-arch/repository"
 	"go-fiber-clean-arch/validation"
@@ -17,6 +19,29 @@ func NewUserService(userRepository *repository.UserRepository) UserService {
 	}
 }
 
+func (service *userServiceImpl) Login(request model.LoginRequest) (response model.LoginResponse) {
+	validation.ValidateLoginUserRequest(request)
+
+	user, err := service.UserRepository.FindByEmail(request.Email)
+	if err != nil {
+		// If email does not exist
+		// response.Token = ""
+		return response
+	}
+
+	isOk := helpers.ComparePass([]byte(user.Password), []byte(request.Password))
+	if !isOk {
+		// If db password and request password not match
+		return response
+	}
+
+	response = model.LoginResponse{
+		Token: helpers.GenerateToken(user.Id, user.Email, user.Username),
+	}
+
+	return response
+}
+
 func (service *userServiceImpl) Create(request model.RegisterRequest) (response model.RegisterResponse) {
 	validation.ValidateCreateUserRequest(request)
 
@@ -24,7 +49,7 @@ func (service *userServiceImpl) Create(request model.RegisterRequest) (response 
 		Id:       request.Id,
 		Username: request.Username,
 		Email:    request.Email,
-		Password: request.Password,
+		Password: helpers.HashPass(request.Password),
 	}
 
 	service.UserRepository.Create(user)
@@ -51,11 +76,13 @@ func (service *userServiceImpl) List() (responses []model.GetUserResponse) {
 	return responses
 }
 
-func(service *userServiceImpl) FindById(id string)(response model.GetUserResponse){
-	user := service.UserRepository.FindById(id)
+func (service *userServiceImpl) FindById(id string) (response model.GetUserResponse) {
+	user, err := service.UserRepository.FindById(id)
+	exception.PanicIfErr(err)
+
 	response = model.GetUserResponse{
-		Id: user.Id,
-		Email: user.Email,
+		Id:       user.Id,
+		Email:    user.Email,
 		Username: user.Username,
 		Password: user.Password,
 	}
